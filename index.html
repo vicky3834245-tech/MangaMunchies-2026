@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,6 +7,7 @@
 <title>MangaMunchies | Sandyuchiha</title>
 <link rel="preload" as="image" href="assets/anime-hero.webp">
 <link rel="stylesheet" href="assets/style.css">
+
 <style>
 .reader-pages {
   display:flex;
@@ -67,6 +67,38 @@
   text-align:center;
   margin:10px 0;
 }
+.library-heading {
+  margin:25px 0 12px;
+}
+.library-heading h2 {
+  margin:5px 0;
+}
+.library-heading small {
+  opacity:.7;
+}
+.chapter-item,
+.volume-item {
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  text-align:left;
+  margin:8px 0;
+  padding:14px;
+  cursor:pointer;
+}
+.chapter-item small,
+.volume-item small {
+  opacity:.75;
+}
+.library-back {
+  margin:10px 0 16px;
+}
+.upload-hint {
+  font-size:.9em;
+  opacity:.75;
+}
 @media(max-width:600px) {
   .reader-pages.mode-double .reader-page {
     width:50%;
@@ -106,22 +138,40 @@ alt="Anime character artwork" fetchpriority="high">
 <div class="hero-note">A home for stories <span>✿</span></div>
 </section>
 
+<!-- UPLOAD -->
 <section id="upload" class="panel">
 <div>
 <small>COMMUNITY UPLOAD</small>
-<h2>Upload manga</h2>
+<h2>Upload manga / OVA</h2>
 <p>Everyone can upload manga pages to the public library.</p>
 </div>
 
 <form id="uploadForm">
+
 <label>
-Manga title
-<input id="title" maxlength="100" required placeholder="Manga title">
+Content type
+<select id="contentType" required>
+<option value="manga">Manga</option>
+<option value="ova">OVA</option>
+</select>
 </label>
 
 <label>
-Volume / Chapter
-<input id="volume" maxlength="100" placeholder="Volume 1 • Chapter 1">
+Manga / OVA title
+<input id="title" maxlength="100" required
+placeholder="Example: Naruto">
+</label>
+
+<label id="volumeField">
+Volume name
+<input id="volumeName" maxlength="100"
+placeholder="Example: Volume 1" value="Volume 1">
+</label>
+
+<label>
+Chapter name
+<input id="chapterName" maxlength="100"
+placeholder="Example: Chapter 1" value="Chapter 1" required>
 </label>
 
 <label>
@@ -132,7 +182,8 @@ multiple required>
 </label>
 
 <p class="upload-hint">
-Select up to 50 page images for one chapter at once.
+Enter an existing Volume / Chapter name to add pages to it.
+Enter a new name to create a new Volume or Chapter.
 JPG, PNG, WEBP and GIF, max 8 MB each.
 </p>
 
@@ -141,17 +192,30 @@ JPG, PNG, WEBP and GIF, max 8 MB each.
 </form>
 </section>
 
+<!-- MANGA LIBRARY -->
 <section id="gallery">
+
 <div class="heading">
 <div>
 <small>PUBLIC LIBRARY</small>
-<h2>Latest manga</h2>
+<h2>📚 Manga Library</h2>
 </div>
 <button id="refresh" class="secondary">Refresh</button>
 </div>
+
 <div id="grid" class="grid">Loading…</div>
+
+<!-- OVA SEPARATE -->
+<div class="library-heading">
+<small>ANIME SPECIALS</small>
+<h2>🎬 OVA Library</h2>
+</div>
+
+<div id="ovaGrid" class="grid">Loading…</div>
+
 </section>
 
+<!-- READER -->
 <section id="reader" class="reader hidden" aria-live="polite">
 
 <div class="reader-top">
@@ -168,7 +232,7 @@ JPG, PNG, WEBP and GIF, max 8 MB each.
 
 <div class="reader-actions">
 <button id="backToChapters" class="secondary">← Chapters</button>
-<b id="chapterName"></b>
+<b id="chapterNameDisplay"></b>
 </div>
 
 <div class="reader-controls">
@@ -178,8 +242,8 @@ JPG, PNG, WEBP and GIF, max 8 MB each.
 </div>
 
 <div class="reader-navigation">
-<button type="button" id="readerPrev" class="secondary">← Previous</button>
-<button type="button" id="readerNext" class="secondary">Next →</button>
+<button type="button" id="readerPrev" class="secondary">← Previous Page</button>
+<button type="button" id="readerNext" class="secondary">Next Page →</button>
 </div>
 
 <p id="readerPageNumber">Page 1</p>
@@ -189,8 +253,13 @@ JPG, PNG, WEBP and GIF, max 8 MB each.
 </div>
 
 <div class="reader-navigation">
-<button type="button" id="readerPrevBottom" class="secondary">← Previous</button>
-<button type="button" id="readerNextBottom" class="secondary">Next →</button>
+<button type="button" id="readerPrevBottom" class="secondary">← Previous Page</button>
+<button type="button" id="readerNextBottom" class="secondary">Next Page →</button>
+</div>
+
+<div class="reader-navigation">
+<button type="button" id="previousChapter" class="secondary">← Previous Chapter</button>
+<button type="button" id="nextChapter" class="secondary">Next Chapter →</button>
 </div>
 
 </div>
@@ -219,6 +288,7 @@ rows="3" required placeholder="Write a comment..."></textarea>
 
 </section>
 
+<!-- OWNER DASHBOARD -->
 <section id="owner" class="owner-section">
 
 <div class="heading">
@@ -317,7 +387,7 @@ Choose theme
 <div class="panel owner-list">
 <div>
 <h3>Manga management</h3>
-<p>Review all public uploads and remove unwanted manga pages.</p>
+<p>Review all public uploads and remove unwanted pages.</p>
 </div>
 <div id="ownerMangaList" class="manage-list">Loading…</div>
 </div>
@@ -332,8 +402,7 @@ Choose theme
 <strong>Sandyuchiha</strong> · A home for stories
 </footer>
 
-<script type="module" src="assets/app.js?v=2"></script>
+<script type="module" src="assets/app.js?v=3"></script>
 
 </body>
   </html>
-  
