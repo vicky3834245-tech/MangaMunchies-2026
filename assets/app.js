@@ -1,14 +1,15 @@
-import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const URL = "https://eaaqnmaouwqvtnbugkds.supabase.co";
 const KEY = "sb_publishable_Hi9QQp6knAoRyC_vxWnxJA_8G8HZJ-T";
 const BUCKET = "manga-pages";
 
-const db = createClient(URL,KEY,{
-  auth:{
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:true
+const db = createClient(URL, KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
 });
 
@@ -24,52 +25,32 @@ let activeFolderRecords = [];
 let activeVolumeName = "";
 let activeChapters = [];
 let activeChapterIndex = 0;
-
 let activePages = [];
 let activePageIndex = 0;
 
-let readerMode = ["vertical","single","double"].includes(
+let readerMode = ["vertical", "single", "double"].includes(
   localStorage.getItem("mm_reader_mode")
 ) ? localStorage.getItem("mm_reader_mode") : "vertical";
 
 const themes = [
-  "anime","midnight","sakura","ocean","forest","sunset","mono",
-  "cyberpunk","dragon","lavender","crimson","light","retro","ice",
-  "coffee","shonen","ninja","mecha","spirit","kawaii","tokyo","manga","cosmic"
+  "anime", "midnight", "sakura", "ocean", "forest", "sunset",
+  "mono", "cyberpunk", "dragon", "lavender", "crimson", "light",
+  "retro", "ice", "coffee", "shonen", "ninja", "mecha",
+  "spirit", "kawaii", "tokyo", "manga", "cosmic"
 ];
 
-// THEME
-function setTheme(theme) {
-  const t = themes.includes(theme) ? theme : "midnight";
-  document.body.dataset.theme = t;
+// =====================================
+// COMMON HELPERS
+// =====================================
 
-  if (el("themeSelect")) {
-    el("themeSelect").value = t;
-  }
-}
-
-async function loadTheme() {
-  try {
-    const {data,error} = await db.from("site_settings")
-      .select("setting_value")
-      .eq("setting_key","theme")
-      .maybeSingle();
-
-    if (!error && data?.setting_value) {
-      setTheme(data.setting_value);
-    } else {
-      setTheme("anime");
-    }
-  } catch {
-    setTheme("anime");
-  }
+function safeText(value) {
+  return String(value ?? "");
 }
 
 function makePublicUrl(path) {
   return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
-// DATA HELPERS
 function recordType(record) {
   return record.content_type === "ova" ? "ova" : "manga";
 }
@@ -84,12 +65,12 @@ function recordChapter(record) {
 }
 
 function sortOldest(records) {
-  return [...records].sort((a,b) =>
+  return [...records].sort((a, b) =>
     new Date(a.created_at) - new Date(b.created_at)
   );
 }
 
-function groupByName(records,getName) {
+function groupByName(records, getName) {
   const map = new Map();
 
   for (const record of sortOldest(records)) {
@@ -97,10 +78,7 @@ function groupByName(records,getName) {
     const key = name.toLocaleLowerCase();
 
     if (!map.has(key)) {
-      map.set(key,{
-        name,
-        records:[]
-      });
+      map.set(key, { name, records: [] });
     }
 
     map.get(key).records.push(record);
@@ -109,21 +87,94 @@ function groupByName(records,getName) {
   return [...map.values()];
 }
 
-// GALLERY
+function showMessage(id, message) {
+  const node = el(id);
+  if (node) node.textContent = message;
+}
+
+// =====================================
+// THEMES
+// =====================================
+
+function setTheme(theme) {
+  const selected = themes.includes(theme) ? theme : "anime";
+  document.body.dataset.theme = selected;
+
+  if (el("themeSelect")) {
+    el("themeSelect").value = selected;
+  }
+}
+
+async function loadTheme() {
+  try {
+    const { data, error } = await db
+      .from("site_settings")
+      .select("setting_value")
+      .eq("setting_key", "theme")
+      .maybeSingle();
+
+    if (!error && data?.setting_value) {
+      setTheme(data.setting_value);
+    } else {
+      setTheme("anime");
+    }
+  } catch {
+    setTheme("anime");
+  }
+}
+
+el("themeForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!isOwner) {
+    showMessage("themeMessage", "Owner access required.");
+    return;
+  }
+
+  const theme = el("themeSelect").value;
+  const button = el("saveTheme");
+
+  button.disabled = true;
+  showMessage("themeMessage", "Saving theme...");
+
+  try {
+    const { error } = await db.from("site_settings").upsert({
+      setting_key: "theme",
+      setting_value: theme
+    }, {
+      onConflict: "setting_key"
+    });
+
+    if (error) throw error;
+
+    setTheme(theme);
+    showMessage("themeMessage", "Theme saved successfully!");
+  } catch (error) {
+    showMessage("themeMessage", error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// =====================================
+// LOAD PUBLIC LIBRARY
+// =====================================
+
 async function load() {
   const grid = el("grid");
   const ovaGrid = el("ovaGrid");
 
-  grid.textContent = "Loading…";
-  ovaGrid.textContent = "Loading…";
+  grid.textContent = "Loading...";
+  ovaGrid.textContent = "Loading...";
 
-  const {data,error} = await db.from("public_manga")
+  const { data, error } = await db
+    .from("public_manga")
     .select("id,title,volume,storage_path,created_at,content_type,volume_name,chapter_name")
-    .order("created_at",{ascending:false})
+    .order("created_at", { ascending: false })
     .limit(1000);
 
   if (error) {
-    grid.textContent = "Gallery setup missing. Check Supabase SQL setup.";
+    grid.textContent = "Gallery error: " + error.message;
     ovaGrid.textContent = "Could not load OVA library.";
     return;
   }
@@ -138,11 +189,11 @@ async function load() {
     record => recordType(record) === "ova"
   );
 
-  renderFolderCards(mangaRecords,grid,"manga");
-  renderFolderCards(ovaRecords,ovaGrid,"ova");
+  renderFolderCards(mangaRecords, grid, "manga");
+  renderFolderCards(ovaRecords, ovaGrid, "ova");
 }
 
-function renderFolderCards(records,container,type) {
+function renderFolderCards(records, container, type) {
   container.replaceChildren();
 
   if (!records.length) {
@@ -152,14 +203,13 @@ function renderFolderCards(records,container,type) {
     return;
   }
 
-  const groups = groupByName(records,r =>
-    (r.title || "Untitled").trim()
-  );
-
-  groups.reverse();
+  const groups = groupByName(
+    records,
+    record => (record.title || "Untitled").trim()
+  ).reverse();
 
   for (const group of groups) {
-    const latest = [...group.records].sort((a,b) =>
+    const latest = [...group.records].sort((a, b) =>
       new Date(b.created_at) - new Date(a.created_at)
     )[0];
 
@@ -180,21 +230,13 @@ function renderFolderCards(records,container,type) {
     const count = document.createElement("p");
 
     if (type === "manga") {
-      const volumes = groupByName(
-        group.records,recordVolume
-      );
-
-      const chapters = groupByName(
-        group.records,recordChapter
-      );
+      const volumes = groupByName(group.records, recordVolume);
+      const chapters = groupByName(group.records, recordChapter);
 
       count.textContent =
         `📚 ${volumes.length} Volumes · ${chapters.length} Chapters`;
     } else {
-      const chapters = groupByName(
-        group.records,recordChapter
-      );
-
+      const chapters = groupByName(group.records, recordChapter);
       count.textContent = `🎬 ${chapters.length} OVA entries`;
     }
 
@@ -204,18 +246,19 @@ function renderFolderCards(records,container,type) {
       ? "🎬 Open OVA"
       : "📁 Open Manga Folder";
 
-    open.addEventListener("click",() => {
-      openMangaFolder(group,type);
-    });
+    open.addEventListener("click", () => openMangaFolder(group, type));
 
-    info.append(heading,count,open);
-    card.append(img,info);
+    info.append(heading, count, open);
+    card.append(img, info);
     container.append(card);
   }
 }
 
-// OPEN MANGA / OVA FOLDER
-async function openMangaFolder(group,type) {
+// =====================================
+// OPEN FOLDER
+// =====================================
+
+async function openMangaFolder(group, type) {
   activeMangaTitle = group.name;
   activeContentType = type;
   activeFolderRecords = group.records;
@@ -237,8 +280,8 @@ async function openMangaFolder(group,type) {
   }
 
   el("reader").scrollIntoView({
-    behavior:"smooth",
-    block:"start"
+    behavior: "smooth",
+    block: "start"
   });
 
   await loadComments();
@@ -247,17 +290,20 @@ async function openMangaFolder(group,type) {
     "mm_view_" + type + "_" + group.name.toLowerCase();
 
   if (!sessionStorage.getItem(seenKey)) {
-    const {error} = await db.rpc("increment_manga_view",{
-      manga_title_input:group.name
+    const { error } = await db.rpc("increment_manga_view", {
+      manga_title_input: group.name
     });
 
     if (!error) {
-      sessionStorage.setItem(seenKey,"1");
+      sessionStorage.setItem(seenKey, "1");
     }
   }
 }
 
-// MANGA VOLUME LIST
+// =====================================
+// MANGA VOLUMES
+// =====================================
+
 function renderVolumes() {
   const list = el("chapterList");
 
@@ -270,9 +316,7 @@ function renderVolumes() {
   el("readerLabel").textContent = "MANGA VOLUMES";
   el("readerTitle").textContent = activeMangaTitle;
 
-  const volumes = groupByName(
-    activeFolderRecords,recordVolume
-  );
+  const volumes = groupByName(activeFolderRecords, recordVolume);
 
   if (!volumes.length) {
     list.textContent = "No volumes found.";
@@ -280,9 +324,7 @@ function renderVolumes() {
   }
 
   for (const volume of volumes) {
-    const chapters = groupByName(
-      volume.records,recordChapter
-    );
+    const chapters = groupByName(volume.records, recordChapter);
 
     const button = document.createElement("button");
     button.className = "volume-item";
@@ -291,12 +333,11 @@ function renderVolumes() {
     name.textContent = "📁 " + volume.name;
 
     const detail = document.createElement("small");
-    detail.textContent =
-      `${chapters.length} Chapters · Open →`;
+    detail.textContent = `${chapters.length} Chapters · Open →`;
 
-    button.append(name,detail);
+    button.append(name, detail);
 
-    button.addEventListener("click",() => {
+    button.addEventListener("click", () => {
       renderVolumeChapters(volume.name);
     });
 
@@ -304,7 +345,10 @@ function renderVolumes() {
   }
 }
 
-// CHAPTER LIST INSIDE A VOLUME
+// =====================================
+// CHAPTERS INSIDE VOLUME
+// =====================================
+
 function renderVolumeChapters(volumeName) {
   activeVolumeName = volumeName;
 
@@ -313,24 +357,23 @@ function renderVolumeChapters(volumeName) {
       volumeName.toLowerCase()
   );
 
-  const chapters = groupByName(records,recordChapter);
+  const chapters = groupByName(records, recordChapter);
 
-  renderChapterList(chapters,() => {
-    renderVolumes();
-  });
+  renderChapterList(chapters, renderVolumes);
 
   el("readerLabel").textContent = "CHAPTERS";
   el("readerTitle").textContent =
     activeMangaTitle + " · " + volumeName;
 }
 
-// OVA LIST - SEPARATE FROM MANGA VOLUMES
-function renderOvaChapters() {
-  const chapters = groupByName(
-    activeFolderRecords,recordChapter
-  );
+// =====================================
+// OVA LIBRARY
+// =====================================
 
-  renderChapterList(chapters,() => {
+function renderOvaChapters() {
+  const chapters = groupByName(activeFolderRecords, recordChapter);
+
+  renderChapterList(chapters, () => {
     el("reader").classList.add("hidden");
   });
 
@@ -338,8 +381,11 @@ function renderOvaChapters() {
   el("readerTitle").textContent = activeMangaTitle;
 }
 
+// =====================================
 // COMMON CHAPTER LIST
-function renderChapterList(chapters,backAction) {
+// =====================================
+
+function renderChapterList(chapters, backAction) {
   const list = el("chapterList");
 
   list.replaceChildren();
@@ -354,7 +400,7 @@ function renderChapterList(chapters,backAction) {
     ? "← Back"
     : "← Back to Volumes";
 
-  back.addEventListener("click",backAction);
+  back.addEventListener("click", backAction);
   list.append(back);
 
   activeChapters = chapters;
@@ -366,7 +412,7 @@ function renderChapterList(chapters,backAction) {
     return;
   }
 
-  chapters.forEach((chapter,index) => {
+  chapters.forEach((chapter, index) => {
     const button = document.createElement("button");
     button.className = "chapter-item";
 
@@ -377,18 +423,21 @@ function renderChapterList(chapters,backAction) {
     detail.textContent =
       `📖 ${chapter.records.length} pages · Read →`;
 
-    button.append(name,detail);
+    button.append(name, detail);
 
-    button.addEventListener("click",() => {
-      readChapter(chapter,index);
+    button.addEventListener("click", () => {
+      readChapter(chapter, index);
     });
 
     list.append(button);
   });
 }
 
+// =====================================
 // READER
-function readChapter(chapter,index) {
+// =====================================
+
+function readChapter(chapter, index) {
   activeChapterIndex = index;
   activePages = sortOldest(chapter.records);
   activePageIndex = 0;
@@ -406,7 +455,6 @@ function readChapter(chapter,index) {
 
 function renderReaderPages() {
   const box = el("readerPages");
-
   if (!box) return;
 
   box.replaceChildren();
@@ -417,15 +465,13 @@ function renderReaderPages() {
     return;
   }
 
-  const start = readerMode === "vertical"
-    ? 0
-    : activePageIndex;
+  const start = readerMode === "vertical" ? 0 : activePageIndex;
 
   const count = readerMode === "vertical"
     ? activePages.length
     : readerMode === "double" ? 2 : 1;
 
-  const end = Math.min(activePages.length,start + count);
+  const end = Math.min(activePages.length, start + count);
 
   for (let i = start; i < end; i++) {
     const img = document.createElement("img");
@@ -438,13 +484,10 @@ function renderReaderPages() {
     box.append(img);
   }
 
-  const number = el("readerPageNumber");
-
-  if (number) {
-    number.textContent = readerMode === "vertical"
+  el("readerPageNumber").textContent =
+    readerMode === "vertical"
       ? `${activePages.length} pages`
       : `Page ${start + 1}${end > start + 1 ? " - " + end : ""} / ${activePages.length}`;
-  }
 
   document.querySelectorAll("[data-reader-mode]").forEach(button => {
     button.classList.toggle(
@@ -456,39 +499,39 @@ function renderReaderPages() {
   const previousDisabled = activePageIndex <= 0;
   const nextDisabled = activePageIndex + count >= activePages.length;
 
-  ["readerPrev","readerPrevBottom"].forEach(id => {
-    el(id).disabled =
-      readerMode === "vertical" || previousDisabled;
+  ["readerPrev", "readerPrevBottom"].forEach(id => {
+    el(id).disabled = readerMode === "vertical" || previousDisabled;
   });
 
-  ["readerNext","readerNextBottom"].forEach(id => {
-    el(id).disabled =
-      readerMode === "vertical" || nextDisabled;
+  ["readerNext", "readerNextBottom"].forEach(id => {
+    el(id).disabled = readerMode === "vertical" || nextDisabled;
   });
 }
 
 function changeReaderPage(direction) {
-  if (readerMode === "vertical" || !activePages.length) {
-    return;
-  }
+  if (readerMode === "vertical" || !activePages.length) return;
 
   const step = readerMode === "double" ? 2 : 1;
 
   const maxIndex = readerMode === "double"
-    ? Math.max(0,Math.ceil(activePages.length / 2) * 2 - 2)
+    ? Math.max(0, Math.ceil(activePages.length / 2) * 2 - 2)
     : activePages.length - 1;
 
   activePageIndex = Math.max(
     0,
-    Math.min(maxIndex,activePageIndex + direction * step)
+    Math.min(maxIndex, activePageIndex + direction * step)
   );
 
   renderReaderPages();
 }
 
+// =====================================
 // PREVIOUS / NEXT CHAPTER
+// =====================================
+
 function updateChapterNavigation() {
   el("previousChapter").disabled = activeChapterIndex <= 0;
+
   el("nextChapter").disabled =
     activeChapterIndex >= activeChapters.length - 1;
 }
@@ -496,58 +539,55 @@ function updateChapterNavigation() {
 function navigateChapter(direction) {
   const next = activeChapterIndex + direction;
 
-  if (next < 0 || next >= activeChapters.length) {
-    return;
-  }
+  if (next < 0 || next >= activeChapters.length) return;
 
-  readChapter(activeChapters[next],next);
+  readChapter(activeChapters[next], next);
 
   el("chapterView").scrollIntoView({
-    behavior:"smooth",
-    block:"start"
+    behavior: "smooth",
+    block: "start"
   });
 }
 
-el("previousChapter").addEventListener("click",() => {
+el("previousChapter").addEventListener("click", () => {
   navigateChapter(-1);
 });
 
-el("nextChapter").addEventListener("click",() => {
+el("nextChapter").addEventListener("click", () => {
   navigateChapter(1);
 });
 
-// READER MODE BUTTONS
+// =====================================
+// READER MODE
+// =====================================
+
 document.querySelectorAll("[data-reader-mode]").forEach(button => {
-  button.addEventListener("click",() => {
+  button.addEventListener("click", () => {
     const mode = button.dataset.readerMode;
 
-    if (!["vertical","single","double"].includes(mode)) {
-      return;
-    }
+    if (!["vertical", "single", "double"].includes(mode)) return;
 
     readerMode = mode;
-    localStorage.setItem("mm_reader_mode",mode);
+    localStorage.setItem("mm_reader_mode", mode);
     activePageIndex = 0;
 
     renderReaderPages();
   });
 });
 
-// PAGE NAVIGATION
-["readerPrev","readerPrevBottom"].forEach(id => {
-  el(id).addEventListener("click",() => {
-    changeReaderPage(-1);
-  });
+["readerPrev", "readerPrevBottom"].forEach(id => {
+  el(id).addEventListener("click", () => changeReaderPage(-1));
 });
 
-["readerNext","readerNextBottom"].forEach(id => {
-  el(id).addEventListener("click",() => {
-    changeReaderPage(1);
-  });
+["readerNext", "readerNextBottom"].forEach(id => {
+  el(id).addEventListener("click", () => changeReaderPage(1));
 });
 
+// =====================================
 // BACK TO CHAPTERS
-el("backToChapters").addEventListener("click",() => {
+// =====================================
+
+el("backToChapters").addEventListener("click", () => {
   el("chapterView").classList.add("hidden");
   el("chapterList").classList.remove("hidden");
   el("commentsPanel").classList.add("hidden");
@@ -562,8 +602,11 @@ el("backToChapters").addEventListener("click",() => {
   el("readerPages").replaceChildren();
 });
 
+// =====================================
 // CLOSE READER
-el("readerClose").addEventListener("click",() => {
+// =====================================
+
+el("readerClose").addEventListener("click", () => {
   el("reader").classList.add("hidden");
 
   activePages = [];
@@ -571,10 +614,12 @@ el("readerClose").addEventListener("click",() => {
   activeChapters = [];
 
   el("readerPages").replaceChildren();
-  el("readerImage").removeAttribute("src");
 });
 
-// UPLOAD TYPE SETTINGS
+// =====================================
+// UPLOAD TYPE
+// =====================================
+
 function updateUploadType() {
   const type = el("contentType").value;
   const volumeField = el("volumeField");
@@ -594,12 +639,15 @@ function updateUploadType() {
   }
 }
 
-el("contentType").addEventListener("change",updateUploadType);
+el("contentType").addEventListener("change", updateUploadType);
 updateUploadType();
 
-// MULTI-PAGE UPLOAD
-el("uploadForm").addEventListener("submit",async e => {
-  e.preventDefault();
+// =====================================
+// UPLOAD MANGA / OVA PAGES
+// =====================================
+
+el("uploadForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
   const button = el("uploadButton");
   const message = el("message");
@@ -625,8 +673,7 @@ el("uploadForm").addEventListener("submit",async e => {
   }
 
   if (chosen.length > 50) {
-    message.textContent =
-      "Please select no more than 50 files at once.";
+    message.textContent = "Please select no more than 50 files at once.";
     return;
   }
 
@@ -656,13 +703,15 @@ el("uploadForm").addEventListener("submit",async e => {
       const file = chosen[i];
 
       message.textContent =
-        `Uploading page ${i + 1} of ${chosen.length}…`;
+        `Uploading page ${i + 1} of ${chosen.length}...`;
 
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const path = crypto.randomUUID() + "." + ext;
 
       let result = await db.storage.from(BUCKET).upload(
-        path,file,{contentType:file.type}
+        path,
+        file,
+        { contentType: file.type }
       );
 
       if (result.error) {
@@ -672,11 +721,11 @@ el("uploadForm").addEventListener("submit",async e => {
 
       result = await db.from("public_manga").insert({
         title,
-        volume:contentType === "ova" ? "OVA" : chapterName,
-        content_type:contentType,
-        volume_name:volumeName,
-        chapter_name:chapterName,
-        storage_path:path
+        volume: contentType === "ova" ? "OVA" : chapterName,
+        content_type: contentType,
+        volume_name: volumeName,
+        chapter_name: chapterName,
+        storage_path: path
       });
 
       if (result.error) {
@@ -700,21 +749,26 @@ el("uploadForm").addEventListener("submit",async e => {
     }
 
     await load();
+    if (isOwner) await loadOwnerList();
 
-  } catch(error) {
+  } catch (error) {
     message.textContent = error.message || "Upload failed.";
   } finally {
     button.disabled = false;
   }
 });
 
+// =====================================
 // OWNER LOGIN
+// =====================================
+
 async function verifyOwner() {
   if (!session?.user) return false;
 
-  const {data,error} = await db.from("site_admins")
+  const { data, error } = await db
+    .from("site_admins")
     .select("user_id")
-    .eq("user_id",session.user.id)
+    .eq("user_id", session.user.id)
     .maybeSingle();
 
   if (error) throw error;
@@ -723,8 +777,8 @@ async function verifyOwner() {
 }
 
 function showOwner() {
-  el("ownerPanel").classList.toggle("hidden",!isOwner);
-  el("ownerLogout").classList.toggle("hidden",!session);
+  el("ownerPanel").classList.toggle("hidden", !isOwner);
+  el("ownerLogout").classList.toggle("hidden", !session);
 
   el("ownerBadge").textContent = isOwner
     ? "Owner verified"
@@ -750,97 +804,4 @@ async function ownerStatus() {
       ? "Owner access verified."
       : "Owner access denied. This account is not registered in site_admins.";
 
-    if (isOwner) {
-      await loadOwnerList();
-      await loadOwnerStats();
-      await loadTheme();
-    }
-
-  } catch(error) {
-    isOwner = false;
-    showOwner();
-
-    el("ownerMessage").textContent =
-      "Could not verify owner: " + (error.message || error);
-  }
-}
-
-el("ownerLoginForm").addEventListener("submit",async e => {
-  e.preventDefault();
-
-  const button = el("ownerLoginButton");
-  button.disabled = true;
-
-  el("ownerMessage").textContent = "Signing in…";
-
-  try {
-    const {data,error} = await db.auth.signInWithPassword({
-      email:el("ownerEmail").value.trim(),
-      password:el("ownerPassword").value
-    });
-
-    if (error) throw error;
-
-    session = data.session;
-    await ownerStatus();
-
-  } catch(error) {
-    el("ownerMessage").textContent =
-      error.message || "Login failed.";
-  } finally {
-    button.disabled = false;
-  }
-});
-
-el("ownerLogout").addEventListener("click",async() => {
-  const {error} = await db.auth.signOut();
-
-  if (error) {
-    el("ownerMessage").textContent = error.message;
-    return;
-  }
-
-  session = null;
-  isOwner = false;
-
-  showOwner();
-  el("ownerMessage").textContent = "Signed out.";
-});
-
-// OWNER UPLOAD LIST
-async function loadOwnerList() {
-  if (!isOwner) return;
-
-  const box = el("ownerMangaList");
-  box.textContent = "Loading uploads…";
-
-  const {data,error} = await db.from("public_manga")
-    .select("id,title,volume,storage_path,created_at,content_type,volume_name,chapter_name")
-    .order("created_at",{ascending:false})
-    .limit(500);
-
-  if (error) {
-    box.textContent = "Could not load uploads: " + error.message;
-    return;
-  }
-
-  box.replaceChildren();
-
-  if (!data.length) {
-    box.textContent = "No manga uploads yet.";
-    return;
-  }
-
-  for (const manga of data) {
-    const row = document.createElement("div");
-    row.className = "manage-row";
-
-    const info = document.createElement("div");
-
-    const title = document.createElement("b");
-    title.textContent = manga.title;
-
-    const sub = document.createElement("div");
-    const small = document.createElement("small");
-
-    const ty
+    if (isOwne
