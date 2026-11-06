@@ -1,4 +1,4 @@
- import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
 
 const URL = "https://eaaqnmaouwqvtnbugkds.supabase.co";
 const KEY = "sb_publishable_Hi9QQp6knAoRyC_vxWnxJA_8G8HZJ-T";
@@ -843,4 +843,4 @@ async function loadOwnerList() {
     const sub = document.createElement("div");
     const small = document.createElement("small");
 
-    const ty               
+    const ty
