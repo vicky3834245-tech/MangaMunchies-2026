@@ -1,302 +1,61 @@
+✦ MangaMunchiesby Sandyuchiha⌂ Home✦ Browse＋ UploadDashboard 
+✦ YOUR ANIME • YOUR MANGA ✦
+Read Your Favorite Manga Here!
+Discover · Read · Enjoy
+✦ Explore Manga
+A home for stories ✿
+COMMUNITY UPLOAD
+Upload manga
+Add one or more chapter entries. Every entry can contain multiple page images.
 
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b0b19">
-<title>MangaMunchies | Sandyuchiha</title>
-<link rel="preload" as="image" href="assets/anime-hero.webp">
-<link rel="stylesheet" href="assets/style.css">
+Chapter entry
+Manga titleVolumeChapter nameChapter page images (select multiple pages)
+All selected images become pages of this one chapter. JPG, PNG, WEBP and GIF · max 8 MB each · up to 50 pages per chapter.
+＋ Add another ChapterUpload All
 
-<style>
-.reader-pages{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
-.reader-pages.mode-single,.reader-pages.mode-double{flex-direction:row;justify-content:center;align-items:flex-start;flex-wrap:nowrap}
-.reader-page{display:block;max-width:100%;height:auto;object-fit:contain;border-radius:8px}
-.reader-pages.mode-single .reader-page{width:auto;max-height:85vh}
-.reader-pages.mode-double .reader-page{width:50%;max-height:85vh}
-.reader-pages.mode-vertical .reader-page{width:100%}
-.reader-controls,.reader-navigation{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;margin:15px 0}
-.reader-controls button.active{outline:2px solid currentColor;font-weight:bold}
-.reader-navigation{justify-content:space-between}
-.reader-navigation button{flex:1}
-#readerPageNumber{text-align:center;margin:10px 0}
-.library-heading{margin:25px 0 12px}
-.library-heading h2{margin:5px 0}
-.library-heading small{opacity:.7}
-.chapter-item,.volume-item{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;margin:8px 0;padding:14px;cursor:pointer}
-.chapter-item small,.volume-item small{opacity:.75}
-.library-back{margin:10px 0 16px}
-.upload-hint{font-size:.9em;opacity:.75}
-.bulk-entry{border:1px solid #7775;border-radius:12px;padding:15px;margin:15px 0}
-.bulk-entry h3{margin-top:0}
-.bulk-entry label{display:block;margin:12px 0}
-.bulk-entry input,.bulk-entry select{width:100%;box-sizing:border-box}
-.bulk-entry .remove-entry{margin-top:8px}
-.bulk-actions{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
-.bulk-actions button{flex:1}
-@media(max-width:600px){
-.reader-pages.mode-double .reader-page{width:50%;max-height:75vh}
-}
-</style>
-</head>
 
-<body>
-<header>
-<b class="brand">
-<span class="brand-mark">✦</span>
-Manga<span>Munchies</span>
-<small class="brand-owner">by Sandyuchiha</small>
-</b>
-<nav>
-<a href="#top">⌂ Home</a>
-<a href="#gallery">✦ Browse</a>
-<a href="#upload">＋ Upload</a>
-<a href="#owner">Dashboard</a>
-</nav>
-</header>
+PUBLIC LIBRARY
+Latest manga
+Refresh
+Loading…
 
-<main>
-<section class="hero" id="top">
-<img class="hero-art" src="assets/anime-hero.webp" alt="Anime character artwork" fetchpriority="high">
-<div class="hero-copy">
-<small>✦ YOUR ANIME • YOUR MANGA ✦</small>
-<h1>Read Your Favorite <em>Manga Here!</em></h1>
-<p>Discover · Read · Enjoy</p>
-<a class="btn" href="#gallery">✦ Explore Manga</a>
-</div>
-<div class="hero-note">A home for stories <span>✿</span></div>
-</section>
+MANGA FOLDER
+Manga
+✕ Close
 
-<!-- BULK UPLOAD -->
-<section id="upload" class="panel">
-<div>
-<small>COMMUNITY UPLOAD</small>
-<h2>Bulk Manga / OVA Upload</h2>
-<p>Add multiple Manga or OVA entries and upload them together.</p>
-</div>
+← ChaptersReading styleVertical ScrollSingle PageDouble Page
+← Previous Chapter← Previous PagePage 1Next Page →Next Chapter →
+Community comments
+Your nameCommentPost comment
 
-<form id="uploadForm">
-<div id="bulkEntries">
 
-<div class="bulk-entry upload-entry" data-entry="0">
-<h3 class="entry-heading">Manga / OVA 1</h3>
+PRIVATE CONTROLS
+Owner Dashboard
+Website owner: Sandyuchiha
+Owner only
 
-<label>Content type
-<select class="entry-type" required>
-<option value="manga">Manga</option>
-<option value="ova">OVA</option>
-</select>
-</label>
+Owner sign in
+Sign in with your owner email and password. Public visitors do not need to log in.
+EmailPassword
+Owner LoginLogout
 
-<label>Manga / OVA title
-<input class="entry-title" maxlength="100" required placeholder="Example: Naruto">
-</label>
 
-<label class="entry-volume-field">Volume name
-<input class="entry-volume" maxlength="100" value="Volume 1" placeholder="Example: Volume 1">
-</label>
 
-<label>Chapter name / Episode name
-<input class="entry-chapter" maxlength="100" required value="Chapter 1" placeholder="Example: Chapter 1">
-</label>
+Website themes
+Choose a theme for the whole MangaMunchies website.
+Choose themeAnime NeonMidnight PlumSakura PinkOcean BlueForest GreenSunset OrangeMonochromeCyberpunk CityDragon FlameLavender DreamCrimson NightClean LightRetro ArcadeArctic IceCoffee MangaShonen BurstNinja ShadowMecha CoreSpirit BlossomKawaii PopMoonlit TokyoManga InkCosmic AcademySave Website Theme
 
-<label>Chapter page images (up to 50 files)
-<input class="entry-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
-</label>
 
-<p class="upload-hint">JPG, PNG, WEBP and GIF. Maximum 8 MB per image.</p>
-</div>
+Default reader style
+Choose the default reading style for visitors. Readers can still change it.
+Default reading styleVertical ScrollSingle PageDouble PageSave Default Style
 
-</div>
 
-<div class="bulk-actions">
-<button type="button" id="addMangaEntry" class="secondary">＋ Add Manga / OVA</button>
-<button type="submit" id="uploadButton">Upload All</button>
-</div>
+Website statistics
+Loading views and comments…
+Recent comments
 
-<p class="upload-hint">
-Each entry has its own title, volume, chapter and images.
-Use an existing title, volume and chapter name to add pages to that chapter.
-</p>
-<p id="message" aria-live="polite"></p>
-</form>
-</section>
-
-<!-- MANGA LIBRARY -->
-<section id="gallery">
-<div class="heading">
-<div>
-<small>PUBLIC LIBRARY</small>
-<h2>📚 Manga Library</h2>
-</div>
-<button id="refresh" class="secondary">Refresh</button>
-</div>
-<div id="grid" class="grid">Loading…</div>
-
-<div class="library-heading">
-<small>ANIME SPECIALS</small>
-<h2>🎬 OVA Library</h2>
-</div>
-<div id="ovaGrid" class="grid">Loading…</div>
-</section>
-
-<!-- READER -->
-<section id="reader" class="reader hidden" aria-live="polite">
-<div class="reader-top">
-<div>
-<small id="readerLabel">MANGA FOLDER</small>
-<h2 id="readerTitle">Manga</h2>
-</div>
-<button id="readerClose" class="secondary">✕ Close</button>
-</div>
-
-<div id="chapterList" class="chapter-list"></div>
-
-<div id="chapterView" class="chapter-view hidden">
-<div class="reader-actions">
-<button id="backToChapters" class="secondary">← Chapters</button>
-<b id="chapterNameDisplay"></b>
-</div>
-
-<div class="reader-controls">
-<button type="button" data-reader-mode="vertical">Vertical Scroll</button>
-<button type="button" data-reader-mode="single">Single Page</button>
-<button type="button" data-reader-mode="double">Double Page</button>
-</div>
-
-<div class="reader-navigation">
-<button type="button" id="readerPrev" class="secondary">← Previous Page</button>
-<button type="button" id="readerNext" class="secondary">Next Page →</button>
-</div>
-
-<p id="readerPageNumber">Page 1</p>
-<div id="readerPages" class="reader-pages mode-vertical">
-<img id="readerImage" alt="Manga chapter page">
-</div>
-
-<div class="reader-navigation">
-<button type="button" id="readerPrevBottom" class="secondary">← Previous Page</button>
-<button type="button" id="readerNextBottom" class="secondary">Next Page →</button>
-</div>
-
-<div class="reader-navigation">
-<button type="button" id="previousChapter" class="secondary">← Previous Chapter</button>
-<button type="button" id="nextChapter" class="secondary">Next Chapter →</button>
-</div>
-</div>
-
-<section id="commentsPanel" class="comments-panel hidden">
-<h3>Community comments</h3>
-<form id="commentForm">
-<label>Your name
-<input id="commentName" maxlength="40" required placeholder="Name">
-</label>
-<label>Comment
-<textarea id="commentText" maxlength="1000" rows="3" required placeholder="Write a comment..."></textarea>
-</label>
-<button id="commentSubmit">Post comment</button>
-<p id="commentMessage" aria-live="polite"></p>
-</form>
-<div id="commentList"></div>
-</section>
-</section>
-
-<!-- OWNER DASHBOARD -->
-<section id="owner" class="owner-section">
-<div class="heading">
-<div>
-<small>PRIVATE CONTROLS</small>
-<h2>Owner Dashboard</h2>
-<p class="owner-signature">Website owner: <strong>Sandyuchiha</strong></p>
-</div>
-<span id="ownerBadge" class="owner-badge">Owner only</span>
-</div>
-
-<div class="panel owner-login">
-<div>
-<h3>Owner sign in</h3>
-<p>Sign in with your owner email and password. Public visitors do not need to log in.</p>
-</div>
-<form id="ownerLoginForm">
-<label>Email
-<input id="ownerEmail" type="email" autocomplete="username" required placeholder="Owner email">
-</label>
-<label>Password
-<input id="ownerPassword" type="password" autocomplete="current-password" required placeholder="Password">
-</label>
-<div class="actions">
-<button id="ownerLoginButton">Owner Login</button>
-<button type="button" id="ownerLogout" class="secondary hidden">Logout</button>
-</div>
-<p id="ownerMessage" aria-live="polite"></p>
-</form>
-</div>
-
-<div id="ownerPanel" class="hidden">
-<div class="panel owner-tools">
-<div>
-<h3>Website themes</h3>
-<p>Choose a theme for the whole MangaMunchies website.</p>
-</div>
-<form id="themeForm">
-<label>Choose theme
-<select id="themeSelect">
-<option value="anime">Anime Neon</option>
-<option value="midnight">Midnight Plum</option>
-<option value="sakura">Sakura Pink</option>
-<option value="ocean">Ocean Blue</option>
-<option value="forest">Forest Green</option>
-<option value="sunset">Sunset Orange</option>
-<option value="mono">Monochrome</option>
-<option value="cyberpunk">Cyberpunk City</option>
-<option value="dragon">Dragon Flame</option>
-<option value="lavender">Lavender Dream</option>
-<option value="crimson">Crimson Night</option>
-<option value="light">Clean Light</option>
-<option value="retro">Retro Arcade</option>
-<option value="ice">Arctic Ice</option>
-<option value="coffee">Coffee Manga</option>
-<option value="shonen">Shonen Burst</option>
-<option value="ninja">Ninja Shadow</option>
-<option value="mecha">Mecha Core</option>
-<option value="spirit">Spirit Blossom</option>
-<option value="kawaii">Kawaii Pop</option>
-<option value="tokyo">Moonlit Tokyo</option>
-<option value="manga">Manga Ink</option>
-<option value="cosmic">Cosmic Academy</option>
-</select>
-</label>
-<button id="saveTheme">Save Website Theme</button>
-<p id="themeMessage" aria-live="polite"></p>
-</form>
-</div>
-
-<div class="panel owner-stats">
-<div>
-<h3>Website statistics</h3>
-<p id="ownerStats">Loading views and comments…</p>
-<h4>Recent comments</h4>
-<div id="recentComments" class="recent-comments"></div>
-</div>
-</div>
-
-<div class="panel owner-list">
-<div>
-<h3>Manga management</h3>
-<p>Review all public uploads and remove unwanted pages.</p>
-</div>
-<div id="ownerMangaList" class="manage-list">Loading…</div>
-</div>
-</div>
-</section>
-</main>
-
-<footer>
-© 2026 MangaMunchies · Owned by <strong>Sandyuchiha</strong> · A home for stories
-</footer>
-
-<script type="module" src="assets/app.js?v=4"></script>
-</body>
-  </html>
-  
+Manga management
+Review all public uploads and remove unwanted manga pages.
+Loading…
+© 2026 MangaMunchies · Owned by Sandyuchiha · A home for stories
