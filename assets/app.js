@@ -21,7 +21,9 @@ let publicManga = [];
 let activeMangaTitle = "";
 let activePages = [];
 let activePageIndex = 0;
-let readerMode = localStorage.getItem("mm_reader_mode") || "vertical";
+let readerMode = ["vertical","single","double"].includes(
+  localStorage.getItem("mm_reader_mode")
+) ? localStorage.getItem("mm_reader_mode") : "vertical";
 
 const themes = [
   "anime","midnight","sakura","ocean","forest","sunset","mono",
@@ -216,19 +218,18 @@ function renderReaderPages() {
 
   const start = readerMode === "vertical" ? 0 : activePageIndex;
 
-  const end = readerMode === "vertical"
+  const count = readerMode === "vertical"
     ? activePages.length
-    : Math.min(
-        activePages.length,
-        start + (readerMode === "double" ? 2 : 1)
-      );
+    : readerMode === "double" ? 2 : 1;
+
+  const end = Math.min(activePages.length,start + count);
 
   for (let i = start; i < end; i++) {
     const img = document.createElement("img");
     img.className = "reader-page";
     img.src = makePublicUrl(activePages[i].storage_path);
     img.alt = "Page " + (i + 1);
-    img.loading = "lazy";
+    img.loading = i === start ? "eager" : "lazy";
     box.append(img);
   }
 
@@ -245,6 +246,21 @@ function renderReaderPages() {
       "active",
       button.dataset.readerMode === readerMode
     );
+  });
+
+  const previousDisabled = activePageIndex <= 0;
+  const nextDisabled = activePageIndex + count >= activePages.length;
+
+  ["readerPrev","readerPrevBottom"].forEach(id => {
+    if (el(id)) {
+      el(id).disabled = readerMode === "vertical" || previousDisabled;
+    }
+  });
+
+  ["readerNext","readerNextBottom"].forEach(id => {
+    if (el(id)) {
+      el(id).disabled = readerMode === "vertical" || nextDisabled;
+    }
   });
 }
 
@@ -268,17 +284,19 @@ function changeReaderPage(direction) {
 
   const step = readerMode === "double" ? 2 : 1;
 
+  const maxIndex = readerMode === "double"
+    ? Math.max(0,activePages.length - 2)
+    : activePages.length - 1;
+
   activePageIndex = Math.max(
     0,
-    Math.min(
-      activePages.length - 1,
-      activePageIndex + direction * step
-    )
+    Math.min(maxIndex,activePageIndex + direction * step)
   );
 
   renderReaderPages();
 }
 
+// READER MODE BUTTONS
 document.querySelectorAll("[data-reader-mode]").forEach(button => {
   button.addEventListener("click",() => {
     const mode = button.dataset.readerMode;
@@ -292,18 +310,25 @@ document.querySelectorAll("[data-reader-mode]").forEach(button => {
   });
 });
 
+// PREVIOUS BUTTONS
 ["readerPrev","readerPrevBottom"].forEach(id => {
   if (el(id)) {
-    el(id).addEventListener("click",() => changeReaderPage(-1));
+    el(id).addEventListener("click",() => {
+      changeReaderPage(-1);
+    });
   }
 });
 
+// NEXT BUTTONS
 ["readerNext","readerNextBottom"].forEach(id => {
   if (el(id)) {
-    el(id).addEventListener("click",() => changeReaderPage(1));
+    el(id).addEventListener("click",() => {
+      changeReaderPage(1);
+    });
   }
 });
 
+// CLOSE READER
 el("readerClose").addEventListener("click",() => {
   el("reader").classList.add("hidden");
   activePages = [];
@@ -312,12 +337,15 @@ el("readerClose").addEventListener("click",() => {
   if (el("readerImage")) el("readerImage").removeAttribute("src");
 });
 
+// BACK TO CHAPTERS
 el("backToChapters").addEventListener("click",() => {
   el("chapterView").classList.add("hidden");
   el("chapterList").classList.remove("hidden");
   el("commentsPanel").classList.add("hidden");
   el("readerLabel").textContent = "MANGA FOLDER";
   activePages = [];
+
+  if (el("readerPages")) el("readerPages").replaceChildren();
 });
 
 // MULTI-PAGE UPLOAD
@@ -761,4 +789,4 @@ db.auth.onAuthStateChange((_event,newSession) => {
 
 loadTheme();
 load();
- 
+  
